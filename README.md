@@ -11,7 +11,7 @@ A lightweight web app for hosting **Hand & Brain** chess games with friends. Bui
 
 1. **Teams of two** – one **Hand**, one **Brain**.
 2. On each turn the Brain names any _piece type_ (e.g. “Knight”).
-3. The Hand must move one piece of that type—no hints allowed.
+3. The Hand must move one piece of that type (no hints allowed).
 4. Standard chess rules apply; first team to deliver checkmate wins.
 5. Exactly **4 players** needed.
 
