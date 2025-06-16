@@ -3,7 +3,7 @@
 > **⚠️ Work in progress**  
 > This project is under active development and **not yet ready for production use**. Expect breaking changes and missing features while the core gameplay is being built.
 
-A lightweight web app for hosting **Hand & Brain** chess games with friends. Built with **Vite + React + TypeScript** and styled using **Tailwind CSS**, it lets players spin up a room, share a 4-letter code, and jump straight into the game—no installs, no fuss.
+A lightweight web app for hosting **Hand & Brain** chess games with friends. Built with **Vite + React + TypeScript** and styled using **Tailwind CSS**, it lets players spin up a room, share a 4-letter code, and jump straight into the game.
 
 ---
 
