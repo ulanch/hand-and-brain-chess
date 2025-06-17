@@ -1,4 +1,26 @@
-# Logs
+# ===================================================================
+# Dependency directories
+# ===================================================================
+# These should never be checked in.
+node_modules/
+.pnpm-store/
+
+
+# ===================================================================
+# Build & Output directories
+# ===================================================================
+# Compiled or built files that are generated from source code.
+dist/
+dist-ssr/
+.next/
+out/
+build/
+
+
+# ===================================================================
+# Log files
+# ===================================================================
+# Generic log files from various tools.
 logs
 *.log
 npm-debug.log*
@@ -7,18 +29,46 @@ yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
 
-node_modules
-dist
-dist-ssr
+
+# ===================================================================
+# Environment variables
+# ===================================================================
+# Never commit secrets, API keys, or other sensitive credentials.
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
 *.local
 
-# Editor directories and files
+
+# ===================================================================
+# Editor & OS-specific files
+# ===================================================================
+# These are specific to a user's machine or editor setup.
+
+# VS Code
 .vscode/*
 !.vscode/extensions.json
-.idea
+!.vscode/settings.json
+
+# JetBrains (WebStorm, etc.)
+.idea/
+
+# macOS
 .DS_Store
+.AppleDouble
+.LSOverride
+
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# Other
 *.suo
 *.ntvs*
 *.njsproj
 *.sln
 *.sw?
+
