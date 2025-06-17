@@ -2,58 +2,126 @@ import { useState } from "react";
 import type { FormEvent } from "react";
 import logo from "@/assets/logo.svg";
 
+/**
+ * @component HomeScreen
+ * @description The main landing page for the application. It allows users to enter
+ * their name and a room code to join or create a game. It also provides access
+ * to a modal explaining the game rules.
+ */
 export default function HomeScreen() {
+  // --- State Management ---
   const [name, setName] = useState("");
   const [roomCode, setRoomCode] = useState("");
   const [error, setError] = useState("");
   const [showRules, setShowRules] = useState(false);
 
-  const submit = (e: FormEvent) => {
-    e.preventDefault();
-    if (!name.trim() || !roomCode.trim()) {
-      setError("Both fields are required");
-      return;
-    }
-    setError("");
-    console.log(`Player: ${name}, Room: ${roomCode}`);
+  // --- Input Handlers ---
+
+  /**
+   * @handler handleNameChange
+   * @description Updates the name state, ensuring it is uppercase and contains only letters.
+   * @param {React.ChangeEvent<HTMLInputElement>} e - The input change event.
+   */
+  const handleNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value.toUpperCase().replace(/[^A-Z]/g, "");
+    setName(value);
   };
 
+  /**
+   * @handler handleRoomCodeChange
+   * @description Updates the room code state, ensuring it is uppercase and contains only letters.
+   * @param {React.ChangeEvent<HTMLInputElement>} e - The input change event.
+   */
+  const handleRoomCodeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value.toUpperCase().replace(/[^A-Z]/g, "");
+    setRoomCode(value);
+  };
+
+  // --- API Logic ---
+
+  /**
+   * @function submit
+   * @description Handles the form submission. It validates user input and sends a request
+   * to the backend API to join a room.
+   * @param {FormEvent} e - The form submission event.
+   */
+  const submit = async (e: FormEvent) => {
+    e.preventDefault();
+    setError("");
+
+    // Client-side validation
+    if (!name.trim()) {
+      setError("A name is required.");
+      return;
+    }
+    if (!/^[A-Z]{4}$/.test(roomCode)) {
+      setError("Room code must be 4 letters.");
+      return;
+    }
+
+    try {
+      const response = await fetch("http://localhost:3000/api/rooms/join", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name, roomCode }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || "An unknown error occurred.");
+      }
+
+      console.log("Successfully joined room:", data);
+      // TODO: Implement navigation to the Lobby screen upon successful room join.
+      // This will likely involve a router or a parent component state change.
+      // Example: `props.onJoinSuccess(data.room, data.player)`
+    } catch (err: any) {
+      console.error("Failed to join room:", err);
+      setError(err.message);
+    }
+  };
+
+  // --- JSX Rendering ---
   return (
     <div className="flex min-h-screen w-full flex-col items-center justify-center">
       <form
         onSubmit={submit}
         className="mx-4 w-full max-w-sm rounded-xl bg-white/80 p-10 backdrop-blur ring-1 ring-black/5 shadow-2xl dark:bg-gray-800/70 dark:ring-white/10 sm:p-12"
       >
-        <img
-          src={logo}
-          alt="Hand & Brain Logo"
-          className="mx-auto mb-8 h-24 w-24"
-        />
+        <img src={logo} alt="Hand & Brain Logo" className="mx-auto h-24 w-24" />
+        <h1 className="text-center text-2xl font-bold text-gray-900 dark:text-white mt-4 mb-8">
+          Hand and Brain Chess
+        </h1>
 
         <div className="space-y-6">
           <input
             id="player-name"
             type="text"
-            placeholder="Enter your name"
+            placeholder="NAME"
             value={name}
-            onChange={(e) => setName(e.target.value)}
+            onChange={handleNameChange}
             maxLength={20}
-            className="w-full rounded-md border border-gray-300 bg-white/80 px-4 py-3 text-gray-900 placeholder-gray-500 transition-colors focus:outline-none focus:ring-2 focus:ring-sky-500 dark:border-gray-700 dark:bg-gray-700/80 dark:text-gray-100 dark:placeholder-gray-400 dark:focus:ring-sky-400"
+            className="w-full rounded-md border border-gray-300 bg-white/80 px-4 py-3 text-center font-semibold tracking-wider text-gray-900 placeholder-gray-500 transition-colors focus:outline-none focus:ring-2 focus:ring-sky-500 dark:border-gray-700 dark:bg-gray-700/80 dark:text-gray-100 dark:placeholder-gray-400 dark:focus:ring-sky-400"
             aria-required
           />
 
           <input
             id="room-code"
             type="text"
-            placeholder="Enter a room code"
+            placeholder="ROOM CODE"
             value={roomCode}
-            onChange={(e) => setRoomCode(e.target.value.toUpperCase())}
+            onChange={handleRoomCodeChange}
             maxLength={4}
-            className="w-full rounded-md border border-gray-300 bg-white/80 px-4 py-3 text-gray-900 placeholder-gray-500 transition-colors focus:outline-none focus:ring-2 focus:ring-sky-500 dark:border-gray-700 dark:bg-gray-700/80 dark:text-gray-100 dark:placeholder-gray-400 dark:focus:ring-sky-400"
+            className="w-full rounded-md border border-gray-300 bg-white/80 px-4 py-3 text-center font-semibold tracking-widest text-gray-900 placeholder-gray-500 transition-colors focus:outline-none focus:ring-2 focus:ring-sky-500 dark:border-gray-700 dark:bg-gray-700/80 dark:text-gray-100 dark:placeholder-gray-400 dark:focus:ring-sky-400"
             aria-required
           />
 
-          {error && <p className="text-center text-sm text-red-500">{error}</p>}
+          {error && (
+            <p className="text-center text-sm text-red-500 dark:text-red-400">
+              {error}
+            </p>
+          )}
 
           <button
             type="submit"
@@ -76,10 +144,9 @@ export default function HomeScreen() {
         </p>
       </form>
 
-      {/* Rules Modal */}
       {showRules && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto bg-black/60 p-4">
-          <div className="w-full max-w-md rounded-lg bg-white p-6 shadow-lg dark:bg-gray-800">
+        <div className="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto bg-black/60 p-4 backdrop-blur-sm">
+          <div className="w-full max-w-md rounded-lg bg-white p-6 shadow-lg dark:bg-gray-800 dark:ring-1 dark:ring-white/10">
             <h2 className="mb-4 text-lg font-semibold text-gray-900 dark:text-white">
               Hand &amp; Brain – Rules
             </h2>
