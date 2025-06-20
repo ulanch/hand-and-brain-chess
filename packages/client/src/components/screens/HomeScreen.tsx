@@ -1,6 +1,11 @@
 import { useState } from "react";
 import type { FormEvent } from "react";
 import logo from "@/assets/logo.svg";
+import type { Room, Player } from "../../../../server/src/models/types";
+
+interface HomeScreenProps {
+  onJoinSuccess: (room: Room, player: Player) => void;
+}
 
 /**
  * @component HomeScreen
@@ -8,7 +13,7 @@ import logo from "@/assets/logo.svg";
  * their name and a room code to join or create a game. It also provides access
  * to a modal explaining the game rules.
  */
-export default function HomeScreen() {
+export default function HomeScreen({ onJoinSuccess }: HomeScreenProps) {
   // --- State Management ---
   const [name, setName] = useState("");
   const [roomCode, setRoomCode] = useState("");
@@ -19,11 +24,12 @@ export default function HomeScreen() {
 
   /**
    * @handler handleNameChange
-   * @description Updates the name state, ensuring it is uppercase and contains only letters.
+   * @description Updates the name state, ensuring it is uppercase and contains only letters and spaces.
    * @param {React.ChangeEvent<HTMLInputElement>} e - The input change event.
    */
   const handleNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value.toUpperCase().replace(/[^A-Z]/g, "");
+    // Modified regex to allow spaces (\s) in addition to uppercase letters (A-Z)
+    const value = e.target.value.toUpperCase().replace(/[^A-Z\s]/g, "");
     setName(value);
   };
 
@@ -73,9 +79,7 @@ export default function HomeScreen() {
       }
 
       console.log("Successfully joined room:", data);
-      // TODO: Implement navigation to the Lobby screen upon successful room join.
-      // This will likely involve a router or a parent component state change.
-      // Example: `props.onJoinSuccess(data.room, data.player)`
+      onJoinSuccess(data.room, data.player);
     } catch (err: any) {
       console.error("Failed to join room:", err);
       setError(err.message);
@@ -95,27 +99,45 @@ export default function HomeScreen() {
         </h1>
 
         <div className="space-y-6">
-          <input
-            id="player-name"
-            type="text"
-            placeholder="NAME"
-            value={name}
-            onChange={handleNameChange}
-            maxLength={20}
-            className="w-full rounded-md border border-gray-300 bg-white/80 px-4 py-3 text-center font-semibold tracking-wider text-gray-900 placeholder-gray-500 transition-colors focus:outline-none focus:ring-2 focus:ring-sky-500 dark:border-gray-700 dark:bg-gray-700/80 dark:text-gray-100 dark:placeholder-gray-400 dark:focus:ring-sky-400"
-            aria-required
-          />
+          {/* Player Name Input Group */}
+          <div>
+            <label
+              htmlFor="player-name"
+              className="block text-left text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 pl-2"
+            >
+              NAME
+            </label>
+            <input
+              id="player-name"
+              type="text"
+              placeholder="ENTER YOUR NAME"
+              value={name}
+              onChange={handleNameChange}
+              maxLength={20}
+              className="w-full rounded-md border border-gray-300 bg-white/80 px-4 py-3 text-left font-semibold tracking-wider text-gray-900 placeholder-gray-500 transition-colors focus:outline-none focus:ring-2 focus:ring-sky-500 dark:border-gray-700 dark:bg-gray-700/80 dark:text-gray-100 dark:placeholder-gray-400 dark:focus:ring-sky-400"
+              aria-required
+            />
+          </div>
 
-          <input
-            id="room-code"
-            type="text"
-            placeholder="ROOM CODE"
-            value={roomCode}
-            onChange={handleRoomCodeChange}
-            maxLength={4}
-            className="w-full rounded-md border border-gray-300 bg-white/80 px-4 py-3 text-center font-semibold tracking-widest text-gray-900 placeholder-gray-500 transition-colors focus:outline-none focus:ring-2 focus:ring-sky-500 dark:border-gray-700 dark:bg-gray-700/80 dark:text-gray-100 dark:placeholder-gray-400 dark:focus:ring-sky-400"
-            aria-required
-          />
+          {/* Room Code Input Group */}
+          <div>
+            <label
+              htmlFor="room-code"
+              className="block text-left text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 pl-2"
+            >
+              ROOM CODE
+            </label>
+            <input
+              id="room-code"
+              type="text"
+              placeholder="ENTER A 4-LETTER CODE"
+              value={roomCode}
+              onChange={handleRoomCodeChange}
+              maxLength={4}
+              className="w-full rounded-md border border-gray-300 bg-white/80 px-4 py-3 text-left font-semibold tracking-widest text-gray-900 placeholder-gray-500 transition-colors focus:outline-none focus:ring-2 focus:ring-sky-500 dark:border-gray-700 dark:bg-gray-700/80 dark:text-gray-100 dark:placeholder-gray-400 dark:focus:ring-sky-400"
+              aria-required
+            />
+          </div>
 
           {error && (
             <p className="text-center text-sm text-red-500 dark:text-red-400">
@@ -125,7 +147,7 @@ export default function HomeScreen() {
 
           <button
             type="submit"
-            className="w-full rounded-md bg-sky-500 py-3 font-semibold text-white transition-colors hover:bg-sky-600 active:bg-sky-700 dark:bg-sky-600 dark:hover:bg-sky-700"
+            className="w-full rounded-md bg-sky-500 py-3 font-semibold text-white transition-colors hover:bg-sky-600 active:bg-sky-700 dark:bg-sky-600 dark:hover:bg-sky-700 mt-6"
           >
             Play
           </button>

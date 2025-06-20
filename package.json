@@ -1,16 +1,16 @@
 {
-  "name": "hand-and-brain-chess-workspace",
-  "private": true,
+  "name": "hand-and-brain-chess-monorepo",
   "version": "1.0.0",
-  "description": "The workspace for the Hand and Brain Chess application",
+  "private": true,
   "scripts": {
     "dev:client": "pnpm --filter client dev",
     "dev:server": "pnpm --filter server dev",
     "build": "pnpm --filter \"./packages/*\" build",
-    "lint": "pnpm --filter \"./packages/*\" lint"
+    "lint": "pnpm --filter \"./packages/*\" lint",
+    "test:client": "pnpm --filter client test"
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
-  "packageManager": "pnpm@10.11.0"
+  "devDependencies": {
+    "typescript": "^5.2.2"
+  },
+  "packageManager": "pnpm@10.11.0+sha512.6540583f41cc5f628eb3d9773ecee802f4f9ef9923cc45b69890fb47991d4b092964694ec3a4f738a420c918a333062c8b925d312f42e4f0c263eb603551f977"
 }
