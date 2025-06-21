@@ -1,4 +1,4 @@
-import { Room, Player } from "../models/types";
+import { Room, Player } from "@shared/types/game.js";
 import { randomUUID } from "crypto";
 
 /**
@@ -13,19 +13,35 @@ class RoomService {
   }
 
   /**
-   * Finds a room by its ID or creates a new one if it doesn't exist.
+   * Finds a room by its ID.
    * @param roomId The 4-letter code of the room.
-   * @returns The existing or newly created room.
+   * @returns The existing room or undefined if it doesn't exist.
    */
-  public findOrCreateRoom(roomId: string): Room {
-    let room = this.rooms.get(roomId);
+  public getRoom(roomId: string): Room | undefined {
+    return this.rooms.get(roomId);
+  }
 
-    if (!room) {
-      console.log(`Creating new room with ID: ${roomId}`);
-      room = this.createRoom(roomId);
-      this.rooms.set(roomId, room);
+  /**
+   * Creates a new room with a given ID.
+   * @param roomId The 4-letter code of the room.
+   * @returns The newly created room.
+   * @throws Error if a room with the given ID already exists.
+   */
+  public createNewRoom(roomId: string): Room {
+    if (this.rooms.has(roomId)) {
+      throw new Error(`Room with ID ${roomId} already exists.`);
     }
 
+    const room = {
+      id: roomId,
+      players: [],
+      teams: {
+        team1: { name: "Team 1", brain: null, hand: null },
+        team2: { name: "Team 2", brain: null, hand: null },
+      },
+    };
+    this.rooms.set(roomId, room);
+    console.log(`Created new room with ID: ${roomId}`);
     return room;
   }
 
@@ -60,32 +76,6 @@ class RoomService {
     // TODO: Broadcast an update to all clients in this room about the new player.
 
     return newPlayer;
-  }
-
-  /**
-   * Retrieves the details of a specific room.
-   * @param roomId The ID of the room.
-   * @returns The room object or undefined if not found.
-   */
-  public getRoom(roomId: string): Room | undefined {
-    return this.rooms.get(roomId);
-  }
-
-  /**
-   * Creates a new, empty room object.
-   * @param roomId The 4-letter code for the new room.
-   * @returns A new Room object.
-   */
-  private createRoom(roomId: string): Room {
-    return {
-      id: roomId,
-      players: [],
-      teams: {
-        team1: { name: "Team 1", brain: null, hand: null },
-        team2: { name: "Team 2", brain: null, hand: null },
-      },
-      // gameState: 'lobby' // Default game state
-    };
   }
 
   // TODO: Implement a method to remove a player from a room when they disconnect.

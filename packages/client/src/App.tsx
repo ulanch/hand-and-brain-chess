@@ -1,7 +1,7 @@
-import { useState } from "react";
-import HomeScreen from "./components/screens/HomeScreen";
-import LobbyScreen from "./components/screens/LobbyScreen";
-import type { Room, Player } from "../../server/src/models/types"; // Assuming these types are accessible
+import { useState, useEffect } from "react"; // Import useEffect
+import HomeScreen from "./components/screens/HomeScreen.js";
+import LobbyScreen from "./components/screens/LobbyScreen.js";
+import type { Room, Player } from "@shared/types/game.js";
 
 /**
  * @component App
@@ -9,8 +9,26 @@ import type { Room, Player } from "../../server/src/models/types"; // Assuming t
  * overall view based on the user's current state (e.g., in a lobby or on home screen).
  */
 export default function App() {
-  const [currentRoom, setCurrentRoom] = useState<Room | null>(null);
-  const [currentPlayer, setCurrentPlayer] = useState<Player | null>(null);
+  // Initialize state from localStorage or null
+  const [currentRoom, setCurrentRoom] = useState<Room | null>(() => {
+    try {
+      const storedRoom = localStorage.getItem("currentRoom");
+      return storedRoom ? JSON.parse(storedRoom) : null;
+    } catch (error) {
+      console.error("Failed to parse stored room from localStorage:", error);
+      return null;
+    }
+  });
+
+  const [currentPlayer, setCurrentPlayer] = useState<Player | null>(() => {
+    try {
+      const storedPlayer = localStorage.getItem("currentPlayer");
+      return storedPlayer ? JSON.parse(storedPlayer) : null;
+    } catch (error) {
+      console.error("Failed to parse stored player from localStorage:", error);
+      return null;
+    }
+  });
 
   /**
    * @function handleJoinSuccess
@@ -22,11 +40,28 @@ export default function App() {
   const handleJoinSuccess = (room: Room, player: Player) => {
     setCurrentRoom(room);
     setCurrentPlayer(player);
+    // State will be persisted by the useEffect hook below
   };
 
-  // Conditionally render HomeScreen or LobbyScreen based on whether a room is joined
+  // Effect to persist currentRoom and currentPlayer to localStorage
+  useEffect(() => {
+    if (currentRoom) {
+      localStorage.setItem("currentRoom", JSON.stringify(currentRoom));
+    } else {
+      localStorage.removeItem("currentRoom");
+    }
+  }, [currentRoom]);
+
+  useEffect(() => {
+    if (currentPlayer) {
+      localStorage.setItem("currentPlayer", JSON.stringify(currentPlayer));
+    } else {
+      localStorage.removeItem("currentPlayer");
+    }
+  }, [currentPlayer]);
+
   if (currentRoom && currentPlayer) {
-    return <LobbyScreen />; // TODO: Pass room and player data to LobbyScreen
+    return <LobbyScreen room={currentRoom} player={currentPlayer} />;
   } else {
     return <HomeScreen onJoinSuccess={handleJoinSuccess} />;
   }

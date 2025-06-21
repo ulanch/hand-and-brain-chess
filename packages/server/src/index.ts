@@ -2,7 +2,7 @@ import express from "express";
 import http from "http";
 import { WebSocketServer, WebSocket } from "ws";
 import cors from "cors";
-import { roomRoutes } from "./api/roomRoutes";
+import { roomRoutes } from "./api/roomRoutes.js";
 
 const app = express();
 const server = http.createServer(app);
@@ -46,7 +46,7 @@ wss.on("connection", (ws: WebSocket) => {
 
 app.use("/api/rooms", roomRoutes);
 
-app.get("/", (req, res) => {
+app.get("/", (_, res) => {
   res.send("Hand and Brain Server is running!");
 });
 
