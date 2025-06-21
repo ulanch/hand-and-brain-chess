@@ -1,6 +1,6 @@
-import { render, screen, fireEvent, waitFor } from "@testing-library/react";
-import userEvent from "@testing-library/user-event";
-import HomeScreen from "./HomeScreen";
+import { render, screen, waitFor } from "@testing-library/react";
+import { userEvent } from "@testing-library/user-event";
+import HomeScreen from "./HomeScreen.js";
 import { vi } from "vitest";
 
 // Mock the console methods to prevent test output from cluttering the terminal

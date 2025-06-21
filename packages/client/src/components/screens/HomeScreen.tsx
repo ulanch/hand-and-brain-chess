@@ -1,7 +1,7 @@
 import { useState } from "react";
 import type { FormEvent } from "react";
 import logo from "@/assets/logo.svg";
-import type { Room, Player } from "../../../../server/src/models/types";
+import type { Room, Player } from "@shared/types/game.ts";
 
 interface HomeScreenProps {
   onJoinSuccess: (room: Room, player: Player) => void;
@@ -19,6 +19,7 @@ export default function HomeScreen({ onJoinSuccess }: HomeScreenProps) {
   const [roomCode, setRoomCode] = useState("");
   const [error, setError] = useState("");
   const [showRules, setShowRules] = useState(false);
+  const [mode, setMode] = useState<"initial" | "create" | "join">("initial"); // New state for mode
 
   // --- Input Handlers ---
 
@@ -28,7 +29,6 @@ export default function HomeScreen({ onJoinSuccess }: HomeScreenProps) {
    * @param {React.ChangeEvent<HTMLInputElement>} e - The input change event.
    */
   const handleNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    // Modified regex to allow spaces (\s) in addition to uppercase letters (A-Z)
     const value = e.target.value.toUpperCase().replace(/[^A-Z\s]/g, "");
     setName(value);
   };
@@ -60,16 +60,28 @@ export default function HomeScreen({ onJoinSuccess }: HomeScreenProps) {
       setError("A name is required.");
       return;
     }
-    if (!/^[A-Z]{4}$/.test(roomCode)) {
+
+    if (mode === "join" && !/^[A-Z]{4}$/.test(roomCode)) {
       setError("Room code must be 4 letters.");
       return;
     }
+    // For "create" mode, roomCode will be generated on the server, so no client-side validation here.
 
     try {
-      const response = await fetch("http://localhost:3000/api/rooms/join", {
+      const endpoint =
+        mode === "create"
+          ? "http://localhost:3000/api/rooms/create" // Assuming a /create endpoint for new rooms
+          : "http://localhost:3000/api/rooms/join";
+
+      const body =
+        mode === "create"
+          ? JSON.stringify({ name }) // Only send name for create
+          : JSON.stringify({ name, roomCode }); // Send name and roomCode for join
+
+      const response = await fetch(endpoint, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name, roomCode }),
+        body: body,
       });
 
       const data = await response.json();
@@ -80,9 +92,14 @@ export default function HomeScreen({ onJoinSuccess }: HomeScreenProps) {
 
       console.log("Successfully joined room:", data);
       onJoinSuccess(data.room, data.player);
-    } catch (err: any) {
-      console.error("Failed to join room:", err);
-      setError(err.message);
+    } catch (err: unknown) {
+      if (err instanceof Error) {
+        console.error("Failed to join room:", err);
+        setError(err.message);
+      } else {
+        console.error("Failed to join room:", err);
+        setError("An unknown error occurred.");
+      }
     }
   };
 
@@ -98,60 +115,94 @@ export default function HomeScreen({ onJoinSuccess }: HomeScreenProps) {
           Hand and Brain Chess
         </h1>
 
-        <div className="space-y-6">
-          {/* Player Name Input Group */}
-          <div>
-            <label
-              htmlFor="player-name"
-              className="block text-left text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 pl-2"
+        {mode === "initial" && (
+          <div className="space-y-4">
+            <button
+              type="button"
+              onClick={() => setMode("create")}
+              className="w-full rounded-md bg-blue-500 py-3 font-semibold text-white transition-colors hover:bg-blue-600 active:bg-blue-700 dark:bg-blue-600 dark:hover:bg-blue-700"
             >
-              NAME
-            </label>
-            <input
-              id="player-name"
-              type="text"
-              placeholder="ENTER YOUR NAME"
-              value={name}
-              onChange={handleNameChange}
-              maxLength={20}
-              className="w-full rounded-md border border-gray-300 bg-white/80 px-4 py-3 text-left font-semibold tracking-wider text-gray-900 placeholder-gray-500 transition-colors focus:outline-none focus:ring-2 focus:ring-sky-500 dark:border-gray-700 dark:bg-gray-700/80 dark:text-gray-100 dark:placeholder-gray-400 dark:focus:ring-sky-400"
-              aria-required
-            />
-          </div>
-
-          {/* Room Code Input Group */}
-          <div>
-            <label
-              htmlFor="room-code"
-              className="block text-left text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 pl-2"
+              Create New Room
+            </button>
+            <button
+              type="button"
+              onClick={() => setMode("join")}
+              className="w-full rounded-md bg-green-500 py-3 font-semibold text-white transition-colors hover:bg-green-600 active:bg-green-700 dark:bg-green-600 dark:hover:bg-green-700"
             >
-              ROOM CODE
-            </label>
-            <input
-              id="room-code"
-              type="text"
-              placeholder="ENTER A 4-LETTER CODE"
-              value={roomCode}
-              onChange={handleRoomCodeChange}
-              maxLength={4}
-              className="w-full rounded-md border border-gray-300 bg-white/80 px-4 py-3 text-left font-semibold tracking-widest text-gray-900 placeholder-gray-500 transition-colors focus:outline-none focus:ring-2 focus:ring-sky-500 dark:border-gray-700 dark:bg-gray-700/80 dark:text-gray-100 dark:placeholder-gray-400 dark:focus:ring-sky-400"
-              aria-required
-            />
+              Join Existing Room
+            </button>
           </div>
+        )}
 
-          {error && (
-            <p className="text-center text-sm text-red-500 dark:text-red-400">
-              {error}
-            </p>
-          )}
+        {(mode === "create" || mode === "join") && (
+          <div className="space-y-6">
+            {/* Player Name Input Group */}
+            <div>
+              <label
+                htmlFor="player-name"
+                className="block text-left text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 pl-2"
+              >
+                NAME
+              </label>
+              <input
+                id="player-name"
+                type="text"
+                placeholder="ENTER YOUR NAME"
+                value={name}
+                onChange={handleNameChange}
+                maxLength={20}
+                className="w-full rounded-md border border-gray-300 bg-white/80 px-4 py-3 text-left font-semibold tracking-wider text-gray-900 placeholder-gray-500 transition-colors focus:outline-none focus:ring-2 focus:ring-sky-500 dark:border-gray-700 dark:bg-gray-700/80 dark:text-gray-100 dark:placeholder-gray-400 dark:focus:ring-sky-400"
+                aria-required
+              />
+            </div>
 
-          <button
-            type="submit"
-            className="w-full rounded-md bg-sky-500 py-3 font-semibold text-white transition-colors hover:bg-sky-600 active:bg-sky-700 dark:bg-sky-600 dark:hover:bg-sky-700 mt-6"
-          >
-            Play
-          </button>
-        </div>
+            {mode === "join" && ( // Only show room code for join mode
+              <div>
+                <label
+                  htmlFor="room-code"
+                  className="block text-left text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 pl-2"
+                >
+                  ROOM CODE
+                </label>
+                <input
+                  id="room-code"
+                  type="text"
+                  placeholder="ENTER A 4-LETTER CODE"
+                  value={roomCode}
+                  onChange={handleRoomCodeChange}
+                  maxLength={4}
+                  className="w-full rounded-md border border-gray-300 bg-white/80 px-4 py-3 text-left font-semibold tracking-widest text-gray-900 placeholder-gray-500 transition-colors focus:outline-none focus:ring-2 focus:ring-sky-500 dark:border-gray-700 dark:bg-gray-700/80 dark:text-gray-100 dark:placeholder-gray-400 dark:focus:ring-sky-400"
+                  aria-required
+                />
+              </div>
+            )}
+
+            {error && (
+              <p className="text-center text-sm text-red-500 dark:text-red-400">
+                {error}
+              </p>
+            )}
+
+            <button
+              type="submit"
+              className="w-full rounded-md bg-sky-500 py-3 font-semibold text-white transition-colors hover:bg-sky-600 active:bg-sky-700 dark:bg-sky-600 dark:hover:bg-sky-700 mt-6"
+            >
+              {mode === "create" ? "Create Room" : "Join Room"}
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setMode("initial");
+                setError(""); // Clear error when going back
+                setName(""); // Clear name when going back
+                setRoomCode(""); // Clear room code when going back
+              }}
+              className="mt-2 block w-full text-center text-xs text-gray-500 hover:underline dark:text-gray-400"
+            >
+              Back
+            </button>
+          </div>
+        )}
 
         <button
           type="button"
