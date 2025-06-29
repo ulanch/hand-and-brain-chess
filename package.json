@@ -7,16 +7,25 @@
     "dev:server": "pnpm --filter server dev",
     "build": "pnpm --filter \"./packages/*\" build",
     "lint": "pnpm --filter \"./packages/*\" lint",
-    "test:client": "pnpm --filter client test"
+    "lint:fix": "pnpm --filter \"./packages/*\" lint:fix",
+    "test:client": "pnpm --filter client test",
+    "prepare": "husky"
   },
   "devDependencies": {
-    "depcheck": "^1.4.7",
-    "typescript": "^5.8.3",
-    "eslint": "^9.29.0",
     "@eslint/js": "^9.29.0",
     "@typescript-eslint/eslint-plugin": "^8.34.1",
     "@typescript-eslint/parser": "^8.34.1",
-    "globals": "^16.2.0"
+    "depcheck": "^1.4.7",
+    "eslint": "^9.29.0",
+    "globals": "^16.2.0",
+    "husky": "^9.1.7",
+    "typescript": "^5.8.3"
   },
-  "packageManager": "pnpm@10.11.0"
+  "packageManager": "pnpm@10.11.0",
+  "dependencies": {
+    "lint-staged": "^16.1.2"
+  },
+  "lint-staged": {
+    "**/*.{js,mjs,cjs,ts,tsx,mts,cts}": "eslint --fix --max-warnings=0"
+  }
 }
