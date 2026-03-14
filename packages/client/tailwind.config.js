@@ -1,17 +1,36 @@
-/** @type {import('tailwindcss').Config} */
-export default {
-  darkMode: "class",
-  content: ["./index.html", "./src/**/*.{js,ts,jsx,tsx}"],
-  theme: {
-    extend: {
-      fontFamily: {
-        sans: ["Inter", "ui-sans-serif", "system-ui"],
-        display: ["Poppins", "Inter", "ui-sans-serif"],
+import js from "@eslint/js";
+import globals from "globals";
+import parser from "@typescript-eslint/parser";
+import tsPlugin from "@typescript-eslint/eslint-plugin";
+import { defineConfig } from "eslint/config";
+
+export default defineConfig([
+  {
+    ignores: ["dist/**"],
+  },
+  {
+    files: ["**/*.{js,mjs,cjs}"],
+    languageOptions: {
+      ecmaVersion: "latest",
+      sourceType: "module",
+      globals: globals.node,
+    },
+    plugins: { js },
+    extends: ["js/recommended"],
+  },
+  {
+    files: ["**/*.{ts,mts,cts}"],
+    languageOptions: {
+      parser,
+      parserOptions: {
+        ecmaVersion: "latest",
+        sourceType: "module",
       },
-      fontSize: {
-        h1: ["2rem", { lineHeight: "1.2", letterSpacing: "-0.01em" }],
-      },
+      globals: globals.node,
+    },
+    plugins: { "@typescript-eslint": tsPlugin },
+    rules: {
+      ...tsPlugin.configs.recommended.rules,
     },
   },
-  plugins: [require("@tailwindcss/typography")],
-};
+]);

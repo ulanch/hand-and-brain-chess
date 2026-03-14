@@ -1,0 +1,20 @@
+{
+  "compilerOptions": {
+    "target": "ES2020",
+    "lib": ["ES2020", "DOM", "DOM.Iterable"],
+    "skipLibCheck": true,
+    "strict": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "noFallthroughCasesInSwitch": true,
+    "useDefineForClassFields": true,
+    "jsx": "react-jsx",
+    "baseUrl": ".",
+    "paths": {
+      "@": ["packages/client/src"],
+      "@clientScreens": ["packages/client/src/components/screens"],
+      "@shared/*": ["packages/shared/*"],
+      "@server/*": ["packages/server/src/*"]
+    }
+  }
+}
