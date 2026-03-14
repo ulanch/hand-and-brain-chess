@@ -1,6 +1,6 @@
-// mral3x0/hand-and-brain-chess/hand-and-brain-chess-feat-game-lobby/packages/server/src/controllers/roomController.ts
 import { Request, Response } from "express";
 import { roomService } from "../services/roomService.js";
+import { broadcastToRoom } from "../connectionRegistry.js";
 
 /**
  * Generates a random 4-letter uppercase room code.
@@ -114,8 +114,6 @@ export const joinRoomController = (req: Request, res: Response): void => {
     // --- Service Integration ---
     const player = roomService.addPlayer(existingRoom.id, name);
 
-    // TODO: Associate the created player's ID with their WebSocket connection.
-
     if (!player) {
       res.status(409).json({ message: "This room is full." });
       return;
@@ -125,10 +123,14 @@ export const joinRoomController = (req: Request, res: Response): void => {
       `Player '${player.name}' successfully joined room '${existingRoom.id}'`
     );
 
+    // Notify already-connected players that someone new joined
+    const updatedRoom = roomService.getRoom(existingRoom.id)!;
+    broadcastToRoom(updatedRoom.id, { type: "lobby_update", payload: { room: updatedRoom } });
+
     // --- Success Response ---
     res.status(200).json({
       message: "Successfully joined room.",
-      room: roomService.getRoom(existingRoom.id),
+      room: updatedRoom,
       player,
     });
   } catch (error) {
