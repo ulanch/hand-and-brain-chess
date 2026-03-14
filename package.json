@@ -21,6 +21,7 @@
     "husky": "^9.1.7",
     "typescript": "^5.8.3"
   },
+  "type": "module",
   "packageManager": "pnpm@10.11.0",
   "dependencies": {
     "lint-staged": "^16.1.2"
