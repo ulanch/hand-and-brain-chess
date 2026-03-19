@@ -68,10 +68,11 @@ export default function HomeScreen({ onJoinSuccess }: HomeScreenProps) {
     // For "create" mode, roomCode will be generated on the server, so no client-side validation here.
 
     try {
+      const serverUrl = import.meta.env.VITE_SERVER_URL ?? "http://localhost:3000";
       const endpoint =
         mode === "create"
-          ? "http://localhost:3000/api/rooms/create" // Assuming a /create endpoint for new rooms
-          : "http://localhost:3000/api/rooms/join";
+          ? `${serverUrl}/api/rooms/create`
+          : `${serverUrl}/api/rooms/join`;
 
       const body =
         mode === "create"

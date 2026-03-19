@@ -8,6 +8,7 @@
 - ESLint + Husky pre-commit hook (lint-staged)
 - Vite dev server with `/api` proxy to Express
 - Playwright installed, Storybook + Vitest configured with separate unit/browser projects
+- Storybook default scaffold removed (`src/stories/`)
 
 ### Shared Types (`packages/shared/types/`)
 - `Player` — id, name, team, role
@@ -37,31 +38,44 @@
   - Connection status badge
   - 2×2 team grid (⬜ White / ⬛ Black × Brain / Hand) with interactive role slots
   - Unassigned player list
-  - Start Game button (enabled when all 4 slots filled — wired up visually, not yet functional)
+  - Start Game button (enabled when all 4 slots filled)
   - Leave Room button (sends `leave_room` WS message before clearing state)
-- 29 passing tests (15 unit + 14 Storybook)
+- `GameScreen` — full in-game UI:
+  - Brain picks a piece type; Hand sees highlighted legal moves and makes the move
+  - Move sync via WebSocket (`brain_pick`, `hand_move` message types)
+  - Clock display with low-time warning
+  - Win/loss/draw detection
+- 15 passing unit tests (HomeScreen)
 
 ---
 
-## Up Next
+## Needs Work
 
-### Start Game (small)
-- Add `start_game` client → server WS message
-- Server: validate all 4 slots filled, set `room.status = "in-progress"`, broadcast `lobby_update`
-- Client: navigate from `LobbyScreen` → `GameScreen` when `room.status === "in-progress"`
+### Configuration
+- **Hardcoded URLs** — `localhost:3000` appears in `useSocket.ts:4` and `HomeScreen.tsx:73-74`; needs to be extracted into env config with a `.env.example` file
 
-### GameScreen + Chess (large — main remaining work)
-- Chessboard rendering (`react-chessboard` + `chess.js` recommended)
-- Turn flow:
-  - **Brain's turn**: picks a piece type from a list → server broadcasts to their Hand
-  - **Hand's turn**: legal moves for that piece type highlighted on board → makes the move
-- Move sync via WebSocket (new message types: `brain_pick`, `hand_move`)
-- Win condition (checkmate / stalemate)
+### Testing
+- **Server tests** — zero coverage; `test` script is `echo "No tests yet" && exit 0`; need tests for `RoomService` game logic, move validation, time control, socket handlers, and API endpoints
+- **Client tests** — only `HomeScreen` is tested (15 cases); missing tests for `GameScreen`, `LobbyScreen`, `GameContext`, and `useSocket` hook
 
-### Reconnection resilience
-- `GET /api/rooms/:id` route — lets a refreshed client re-fetch current game state
-- Handle "room not found" on reconnect gracefully (redirect home with message)
+### Features
+- **Reconnection endpoint** — need `GET /api/rooms/:roomId` to verify room exists and return current state; currently a player who refreshes has no recovery path if the room was cleaned up
+- **Pawn promotion UI** — always auto-promotes to Queen; server accepts a promotion parameter but the client never presents a choice UI
+- **Post-game flow** — no "Play Again" button, no return to lobby, no stats or replay
 
-### Cleanup
-- Remove default Storybook scaffold (`src/stories/`) — pre-existing TS errors, not relevant
-- Add server-side tests
+### Data / State
+- **Chat limitations** — no chat history for late-joining players, messages lost on refresh, unbounded message array in memory
+
+### Validation & Error Handling
+- **Validation gaps** — Brain/Hand role enforcement is implicit not explicit; no server-side player name length validation; chat message cap (300) is a magic number
+- **Error handling** — no React error boundary; generic catch blocks in `useSocket`; no structured error codes from the server; no timeout for abandoned games; WebSocket `close` handler doesn't track close reason
+- **Global error handler** — TODO in `roomController.ts` for more robust error handling
+
+### Code Quality
+- **Duplicated `PIECE_SYMBOL` map** — defined in both `GameScreen.tsx` and `roomService.ts`; should live in the shared package
+- **Magic numbers** — clock low-time threshold (15000 ms), chat cap (300), pawn promotion rank checks scattered across codebase
+- **`GameScreen` performance** — creates a new `Chess()` instance on every render
+
+### Ops & Docs
+- **CI/CD** — no GitHub Actions workflows
+- **Documentation** — README missing deployment instructions, contributing guide, known limitations, and troubleshooting section

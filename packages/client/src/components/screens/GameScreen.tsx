@@ -9,6 +9,13 @@ import type {
   SquareHandlerArgs,
 } from "react-chessboard";
 
+const PROMOTION_PIECES: { label: string; symbol: string; value: string }[] = [
+  { label: "Queen",  symbol: "♛", value: "q" },
+  { label: "Rook",   symbol: "♜", value: "r" },
+  { label: "Bishop", symbol: "♝", value: "b" },
+  { label: "Knight", symbol: "♞", value: "n" },
+];
+
 const PIECE_LABELS: { type: PieceType; label: string; symbol: string }[] = [
   { type: "pawn",   label: "Pawn",   symbol: "♟" },
   { type: "knight", label: "Knight", symbol: "♞" },
@@ -305,6 +312,42 @@ function ChatPanel() {
 }
 
 // ---------------------------------------------------------------------------
+// PromotionModal — lets the Hand player choose a promotion piece
+// ---------------------------------------------------------------------------
+
+function PromotionModal({ onChoose }: { onChoose: (piece: string) => void }) {
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 backdrop-blur-sm">
+      <div
+        className="rounded-2xl border border-white/[0.08] bg-slate-800/95
+          shadow-[0_24px_64px_rgba(0,0,0,0.7)] p-6 flex flex-col gap-4 w-72"
+      >
+        <p className="text-center text-[11px] font-bold tracking-[0.18em] uppercase text-sky-400">
+          Promote pawn
+        </p>
+        <div className="grid grid-cols-2 gap-3">
+          {PROMOTION_PIECES.map(({ label, symbol, value }) => (
+            <button
+              key={value}
+              type="button"
+              onClick={() => onChoose(value)}
+              className="flex flex-col items-center justify-center rounded-xl h-24 gap-1
+                border-2 border-slate-600 bg-slate-700/80 text-slate-200 font-semibold
+                hover:border-sky-500 hover:bg-sky-600 hover:text-white
+                hover:shadow-lg hover:shadow-sky-500/20
+                active:scale-95 cursor-pointer transition-all duration-150"
+            >
+              <span className="text-4xl leading-none">{symbol}</span>
+              <span className="text-[12px] tracking-wide">{label}</span>
+            </button>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
 // GameScreen
 // ---------------------------------------------------------------------------
 
@@ -318,6 +361,7 @@ export default function GameScreen() {
     wsConnected,
   } = useGame();
   const [selectedSquare, setSelectedSquare] = useState<string | null>(null);
+  const [promotionPending, setPromotionPending] = useState<{ from: string; to: string } | null>(null);
 
   if (!currentRoom || !currentPlayer || !currentRoom.gameState) return null;
 
@@ -391,10 +435,20 @@ export default function GameScreen() {
   // Move helpers
   function tryMove(from: string, to: string) {
     if (!calledPiece) return;
-    const promo = calledPiece === "pawn" &&
+    const isPromotion = calledPiece === "pawn" &&
       ((turn === "team1" && to[1] === "8") || (turn === "team2" && to[1] === "1"));
-    sendHandMove(from, to, promo ? "q" : undefined);
     setSelectedSquare(null);
+    if (isPromotion) {
+      setPromotionPending({ from, to });
+      return;
+    }
+    sendHandMove(from, to);
+  }
+
+  function handlePromotionChoice(piece: string) {
+    if (!promotionPending) return;
+    sendHandMove(promotionPending.from, promotionPending.to, piece);
+    setPromotionPending(null);
   }
 
   function onSquareClick({ square, piece }: SquareHandlerArgs) {
@@ -469,6 +523,9 @@ export default function GameScreen() {
         background: "radial-gradient(ellipse at 55% 45%, #1e293b 0%, #0f172a 55%, #020617 100%)",
       }}
     >
+      {/* ── Promotion modal ───────────────────────────────────────────────── */}
+      {promotionPending && <PromotionModal onChoose={handlePromotionChoice} />}
+
       {/* ── Disconnection banner ─────────────────────────────────────────── */}
       {!wsConnected && (
         <div className="fixed top-0 inset-x-0 z-50 flex items-center justify-center gap-2

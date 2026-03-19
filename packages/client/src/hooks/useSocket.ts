@@ -1,7 +1,8 @@
 import { useEffect, useRef, useCallback, useState } from "react";
 import type { ClientMessage, ServerMessage } from "@shared/types/messages.js";
 
-const WS_URL = "ws://localhost:3000";
+const _serverUrl = import.meta.env.VITE_SERVER_URL ?? "http://localhost:3000";
+const WS_URL = _serverUrl.replace(/^http/, "ws");
 
 /**
  * Manages a WebSocket connection for a player in a room.
